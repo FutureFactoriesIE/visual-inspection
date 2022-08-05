@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Visual Inspection</title>
+        <link rel="stylesheet" href="./static/style.css">
+    </head>
+    <body onload="on_page_load();">
+        <main>
+
+            <div id="main_layout">
+
+                <div id="image_section">
+
+                    <img id="inspection_image" src="" class="centered_image" width="90%"/>
+                    <h1 class="title" align="center" style="margin: 0;">Inspected Image</h1>
+
+                </div>
+
+                <div id="data_section">
+
+                    <div id="signal_propagation">
+
+                        <h2>Signal Propagation</h2>
+
+                        <div style="display: flex;">
+                            <img src="./static/symbols/calendar.png" width="50px"/>
+                            <p id="date_time">No date data available</p>
+                        </div>
+
+                        <div style="display: flex;">
+                            <img src="./static/symbols/battery.png" width="50px"/>
+                            <p id="battery_life">No battery life data available</p>
+                        </div>
+
+                        <img id="flowchart" src="" class="centered_image" width="90%"/>
+
+                    </div>
+
+                    <div id="raw_json">
+
+                        <h2>Raw JSON:</h2>
+                        <p id="raw_json_text">No raw JSON data available</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+        <img src="./static/logo.png" id="logo"/>
+        <script type="text/javascript" src="./static/index.js"></script>
+    </body>
+</html>
