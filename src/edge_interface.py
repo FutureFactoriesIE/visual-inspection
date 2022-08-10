@@ -164,6 +164,7 @@ class Postman:
         """Clears the outgoing packet queue so no old messages are sent to the web
         app's javascript
         """
+
         self.outgoing_packet_queue = Queue()
 
     def send_and_receive(self, command: Command) -> Any:
@@ -226,6 +227,18 @@ class Postman:
             return self.outgoing_packet_queue.get_nowait()
         except Empty:
             return EventLoopResponse.nothing().to_json()
+
+    def send_buffer_packets(self, num_packets: int):
+        """Sends an input amount of empty packets, which acts as a buffer
+
+        Parameters
+        ----------
+        num_packets : int
+            The number of buffer packets to send
+        """
+
+        for i in range(num_packets):
+            self.outgoing_packet_queue.put(EventLoopResponse.nothing().to_json())
 
 
 class Page:
@@ -297,8 +310,9 @@ class Page:
         if request.method == 'POST':
             # a POST request means the page has fully loaded
             if not self._has_loaded_event.is_set():
+                self._has_loaded_event.set()
                 self.on_load()
-            self._has_loaded_event.set()
+
             message = EventLoopMessage(request.json)
 
             if message.topic == 'command_loop':
@@ -316,6 +330,8 @@ class Page:
             # a GET request means the page has been reloaded
             self._has_loaded_event.clear()
             self._postman.invalidate_outgoing_packets()
+            self._postman.send_buffer_packets(2)
+            # ^ Added to address a bug where some packets are not received by the web app's javascript when reloading
             self.update_interval = self._update_interval
             return render_template(self.template, **self.template_kwargs)
 
@@ -342,7 +358,7 @@ class Page:
             return self._postman.send(Command.javascript(js))
 
     def set_text(self, tag_id: str, text: str):
-        """Sets the innerHTML attribute of any tag in the web app
+        """Sets the `innerHTML` attribute of any tag in the web app
 
         Parameters
         ----------
@@ -356,6 +372,23 @@ class Page:
 
         text = text.replace('\n', '<br />')  # newlines raise an invalid token error
         js = f'document.getElementById("{tag_id}").innerHTML = "{text}";'
+        self.evaluate_javascript(js, get_output=False)
+
+    def set_button_text(self, tag_id: str, text: str):
+        """Sets a button's `value` attribute to `text`
+
+        Parameters
+        ----------
+        tag_id : str
+            The id of the button to edit
+
+            Example: `<input type="button" id="sample_id">`
+        text : str
+            The text to display in the button
+        """
+
+        text = text.replace('\n', '<br />')  # newlines raise an invalid token error
+        js = f'document.getElementById("{tag_id}").value = "{text}";'
         self.evaluate_javascript(js, get_output=False)
 
     def console_log(self, text: str):
@@ -517,6 +550,7 @@ class EdgeInterface:
             raise MissingMainPage()
 
         self.server.start()
+        self.pages['/'].wait_for_page_load()
 
     def wait_forever(self):
         """Blocks infinitely, allowing the server to continue running"""

@@ -14,15 +14,6 @@ from ie_databus import IEDatabus
 
 interface = EdgeInterface(__name__)
 
-
-def on_page_load():
-    interface.pages['/'].set_image_src('flowchart', Flowcharts.iphone_inspection)
-
-
-interface.add_page('/', 'index.html')
-interface.pages['/'].on_load = on_page_load
-interface.start_server()
-
 ie_broker = IEDatabus('edge', 'edge')
 ie_broker.start()
 
@@ -36,6 +27,10 @@ class Flowcharts:
     iphone_inspection = './static/flowcharts/iphone_inspection.png'
     inspection_pass = './static/flowcharts/inspection_pass.png'
     inspection_fail = './static/flowcharts/inspection_fail.png'
+
+
+def on_page_load():
+    interface.pages['/'].set_image_src('flowchart', Flowcharts.iphone_inspection)
 
 
 def create_image(image_data: str, is_pass: bool) -> str:
@@ -96,6 +91,10 @@ def on_message(client, userdata, msg):
 
 
 if __name__ == '__main__':
+    interface.add_page('/', 'index.html')
+    interface.pages['/'].on_load = on_page_load
+    interface.start_server()
+
     public_broker = mqtt.Client()
     public_broker.on_connect = on_connect
     public_broker.on_message = on_message
